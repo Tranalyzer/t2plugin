@@ -1,0 +1,16 @@
+[package]
+name = "t2plugin"
+version = "0.7.0"
+authors = ["Tranalyzer2 dev. team"]
+
+[dependencies]
+libc = "0.2.23"
+pcap = "0.6.0"
+
+[features]
+ETH_ACTIVATE = []
+IPV6_ACTIVATE = []
+SCTP_ACTIVATE = []
+SCTP_STATFINDEX = []
+MULTIPKTSUP = []
+T2_PRI_HDRDESC = []
