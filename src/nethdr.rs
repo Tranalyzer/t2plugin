@@ -103,11 +103,11 @@ pub struct Packet {
     /// Type of the layer 2 header.
     pub l2_type: u16,
     /// Type of the layer 3 header as defined in [`L3Type`](nethdr/enum.L3Type.html).
-    pub l3_type: u16,
+    l3_type: u16,
     /// Per packet status bits.
     pub status: u64,
     /// Type of the layer 4 header as defined in [`L4Type`](nethdr/enum.L4Type.html).
-    pub l4_type: u8,
+    l4_type: u8,
 
     vlan_hdr_count: u8,
     mpls_hdr_count: u8,
@@ -140,7 +140,7 @@ impl Packet {
     /// IPv4 header and is long enough. Returns `None` otherwise.
     pub fn ip4hdr(&self) -> Option<&Ip4Header> {
         let size = mem::size_of::<Ip4Header>();
-        if self.l3_type == L3Type::IPv4 as u16 && self.snap_l3_len as usize >= size && 
+        if self.l3_type() == L3Type::IPv4 && self.snap_l3_len as usize >= size && 
                 self.l3_header != 0 as *const c_void {
             unsafe {
                 Some(&*(self.l3_header as *const Ip4Header))
@@ -154,7 +154,7 @@ impl Packet {
     /// IPv6 header and is long enough. Returns `None` otherwise.
     pub fn ip6hdr(&self) -> Option<&Ip6Header> {
         let size = mem::size_of::<Ip6Header>();
-        if self.l3_type == L3Type::IPv6 as u16 && self.snap_l3_len as usize >= size &&
+        if self.l3_type() == L3Type::IPv6 && self.snap_l3_len as usize >= size &&
                 self.l3_header != 0 as *const c_void {
             unsafe {
                 Some(&*(self.l3_header as *const Ip6Header))
@@ -168,7 +168,7 @@ impl Packet {
     /// TCP header and is long enough. Returns `None` otherwise.
     pub fn tcphdr(&self) -> Option<&TcpHeader> {
         let size = mem::size_of::<TcpHeader>();
-        if self.l4_type == L4Type::TCP as u8 && self.snap_l4_len as usize >= size &&
+        if self.l4_type() == L4Type::TCP && self.snap_l4_len as usize >= size &&
                 self.l4_header != 0 as *const c_void {
             unsafe {
                 Some(&*(self.l4_header as *const TcpHeader))
@@ -182,7 +182,7 @@ impl Packet {
     /// UDP header and is long enough. Returns `None` otherwise.
     pub fn udphdr(&self) -> Option<&UdpHeader> {
         let size = mem::size_of::<UdpHeader>();
-        if self.l4_type == L4Type::UDP as u8 && self.snap_l4_len as usize >= size &&
+        if self.l4_type() == L4Type::UDP && self.snap_l4_len as usize >= size &&
                 self.l4_header != 0 as *const c_void {
             unsafe {
                 Some(&*(self.l4_header as *const UdpHeader))
@@ -196,7 +196,7 @@ impl Packet {
     /// ICMP header and is long enough. Returns `None` otherwise.
     pub fn icmphdr(&self) -> Option<&IcmpHeader> {
         let size = mem::size_of::<IcmpHeader>();
-        if self.l4_type == L4Type::ICMP as u8 && self.snap_l4_len as usize >= size &&
+        if self.l4_type() == L4Type::ICMP && self.snap_l4_len as usize >= size &&
                 self.l4_header != 0 as *const c_void {
             unsafe {
                 Some(&*(self.l4_header as *const IcmpHeader))
@@ -255,21 +255,93 @@ impl Packet {
             slice::from_raw_parts(ptr, (self.snap_l4_len - self.snap_l7_len) as usize)
         }
     }
+
+    /// Type of the layer 3 header as defined in [`L3Type`](nethdr/enum.L3Type.html).
+    pub fn l3_type(&self) -> L3Type {
+        L3Type::from_u16(self.l3_type)
+    }
+
+    /// Type of the layer 4 header as defined in [`L4Type`](nethdr/enum.L4Type.html).
+    pub fn l4_type(&self) -> L4Type {
+        L4Type::from_u8(self.l4_type)
+    }
 }
 
 /// Type of layer 3 headers.
-#[repr(u16)]
+#[derive(PartialEq)]
 pub enum L3Type {
-    IPv4 = 0x0800,
-    IPv6 = 0x86dd,
+    /// Internet Protocol version 4
+    IPv4,
+    /// Internet Protocol version 6
+    IPv6,
+    /// Other protocol not yet implemented in this module. The argument contains an
+    /// [`EtherType`](https://www.iana.org/assignments/ieee-802-numbers/ieee-802-numbers.xhtml).
+    OTHER(u16),
+}
+
+impl L3Type {
+    fn from_u16(val: u16) -> L3Type {
+        match val {
+            0x0800 => L3Type::IPv4,
+            0x86dd => L3Type::IPv6,
+            v      => L3Type::OTHER(v),
+        }
+    }
 }
 
 /// Type of layer 4 headers.
-#[repr(u8)]
+#[derive(PartialEq)]
 pub enum L4Type {
-    ICMP = 1,
-    TCP = 6,
-    UDP = 17,
+    /// Internet Control Message
+    ICMP,
+    /// Internet Group Management
+    IGMP,
+    /// Transmission Control
+    TCP,
+    /// Exterior Gateway Protocol
+    EGP,
+    /// Interior Gateway Protocol (Cisco IGRP)
+    IGP,
+    /// User Datagram
+    UDP,
+    /// Generic Routing Encapsulation
+    GRE,
+    /// Encap Security Payload
+    ESP,
+    /// Authentication Header
+    AH,
+    /// ICMP for IPv6
+    ICMPv6,
+    /// IP-within-IP Encapsulation Protocol
+    IPIP,
+    /// Ethernet-within-IP Encapsulation
+    ETHERIP,
+    /// Layer Two Tunneling Protocol
+    L2TP,
+    /// Other protocol not yet implemented in this module. The argument contains an
+    /// [`Protocol number`](https://www.iana.org/assignments/protocol-numbers/protocol-numbers.xhtml).
+    OTHER(u8),
+}
+
+impl L4Type {
+    fn from_u8(val: u8) -> L4Type {
+        match val {
+            1   => L4Type::ICMP,
+            2   => L4Type::IGMP,
+            6   => L4Type::TCP,
+            8   => L4Type::EGP,
+            9   => L4Type::IGP,
+            17  => L4Type::UDP,
+            47  => L4Type::GRE,
+            50  => L4Type::ESP,
+            51  => L4Type::AH,
+            58  => L4Type::ICMPv6,
+            94  => L4Type::IPIP,
+            97  => L4Type::ETHERIP,
+            115 => L4Type::L2TP,
+            v   => L4Type::OTHER(v),
+        }
+    }
 }
 
 /// Ethernet header: https://en.wikipedia.org/wiki/Ethernet_frame#Ethernet_II
@@ -361,11 +433,13 @@ impl Ip6Header {
         ((ntohl(self.vcl) & 0xf0000000) >> 28) as u8
     }
 
+    /// IPv6 traffic class: service class + ECN bits
     pub fn traffic_class(&self) -> u8 {
         ((ntohl(self.vcl) & 0x0ff00000) >> 20) as u8
     }
 
-    pub fn flow_lable(&self) -> u32 {
+    /// IPv6 flow label
+    pub fn flow_label(&self) -> u32 {
         ntohl(self.vcl) & 0x000fffff
     }
 

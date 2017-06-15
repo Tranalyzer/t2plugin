@@ -470,6 +470,22 @@ impl Header {
         }
     }
 
+    /// Adds a compound column to the header.
+    ///
+    /// # Example
+    ///
+    /// ```
+    /// impl T2Plugin for ExamplePlugin {
+    ///     ...
+    ///     fn print_header() -> Header {
+    ///         let mut header = Header::new();
+    ///         // column which contains for each cookie a compound: count_key_value
+    ///         header.add_compound_col("HTTP cookies", "httpCookies", true, &[BinaryType::u16,
+    ///         BinaryType::bt_string, BinaryType::bt_string]);
+    ///         header
+    ///     }
+    /// }
+    /// ```
     pub fn add_compound_col(&mut self, long_name: &str, short_name: &str, repeating: bool, bin_types: &[BinaryType]) {
         let long = CString::new(long_name).unwrap().into_raw();
         let short = CString::new(short_name).unwrap().into_raw();
