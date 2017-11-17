@@ -1,6 +1,6 @@
 [package]
 name = "t2plugin"
-version = "0.7.0"
+version = "0.7.4"
 authors = ["Tranalyzer2 dev. team"]
 
 [dependencies]

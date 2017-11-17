@@ -50,6 +50,7 @@ pub struct Packet {
     hdr_desc: [c_char; 128],
 
     raw_packet: *const u8,
+    end_packet: *const u8,
     pcap_pkthdr: *const PacketHeader,
     l2_header: *const c_void,
     vlans: *const u32,
@@ -317,9 +318,9 @@ pub enum L4Type {
     UDP,
     /// Generic Routing Encapsulation
     GRE,
-    /// Encap Security Payload
+    /// IPsec Encap Security Payload
     ESP,
-    /// Authentication Header
+    /// IPsec Authentication Header
     AH,
     /// ICMP for IPv6
     ICMPv6,
@@ -680,6 +681,7 @@ pub struct Flow {
     /// has no opposite flow.
     pub opposite_flow_index: c_ulong,
 
+    /// timeout of this flow in seconds
     timeout: f32,
 }
 
