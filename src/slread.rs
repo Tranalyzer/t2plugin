@@ -244,7 +244,7 @@ impl<'a> SliceReader<'a> {
     /// try!(slr.read_copy(&mut data));
     /// ```
     #[inline]
-    pub fn read_copy(&mut self, mut buf: &mut [u8]) -> Result<()> {
+    pub fn read_copy(&mut self, buf: &mut [u8]) -> Result<()> {
         let len = buf.len();
         let left = self.left();
         if left < len {

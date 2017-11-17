@@ -39,7 +39,6 @@
 //! `src/lib.rs`.
 
 extern crate libc;
-extern crate pcap;
 
 /// Contains the definition of a [`Flow`](nethdr/struct.Flow.html), a
 /// [`Packet`](nethdr/struct.Packet.html) and the different protocol headers.
@@ -371,7 +370,7 @@ pub trait T2Plugin {
     /// Called on the first seen packet of a flow.
     ///
     /// This method is called right after the per flow `struct` of this plugin is created with the
-    /// [`new`](trait.T2Plugin.html#method.on_flow_terminate) method.
+    /// [`new`](trait.T2Plugin.html#method.new) method.
     #[allow(unused_variables)]
     fn on_flow_generated(&mut self, packet: &Packet, flow: &mut Flow) {}
 
@@ -456,8 +455,10 @@ impl Header {
     ///     ...
     ///     fn print_header() -> Header {
     ///         let mut header = Header::new();
-    ///         header.add_simple_col("IPv4 source address", "srcIP4", false, BinaryType::bt_ip4_addr);
-    ///         header.add_simple_col("HTTP cookies", "httpCookies", true, BinaryType::bt_string);
+    ///         header.add_simple_col("IPv4 source address", "srcIP4", false,
+    ///                 BinaryType::bt_ip4_addr);
+    ///         header.add_simple_col("HTTP cookies", "httpCookies", true,
+    ///                 BinaryType::bt_string);
     ///         header
     ///     }
     /// }
@@ -480,8 +481,8 @@ impl Header {
     ///     fn print_header() -> Header {
     ///         let mut header = Header::new();
     ///         // column which contains for each cookie a compound: count_key_value
-    ///         header.add_compound_col("HTTP cookies", "httpCookies", true, &[BinaryType::u16,
-    ///         BinaryType::bt_string, BinaryType::bt_string]);
+    ///         header.add_compound_col("HTTP cookies", "httpCookies", true,
+    ///                 &[BinaryType::bt_uint_16, BinaryType::bt_string, BinaryType::bt_string]);
     ///         header
     ///     }
     /// }
@@ -609,7 +610,7 @@ macro_rules! t2plugin {
                 println!("ERROR: claimLayer2Information called with flowIndex={}", flow_index);
             } else {
                 let mut hashmap = FLOWS.lock().unwrap();
-                let mut plugin = hashmap.entry(flow_index).or_insert($TYPE::new());
+                let plugin = hashmap.entry(flow_index).or_insert($TYPE::new());
                 unsafe {
                     $TYPE::claim_l2_info(&*packet, Some(plugin), Some(t2plugin::getflow(flow_index)));
                 }
@@ -632,7 +633,7 @@ macro_rules! t2plugin {
                 return;
             }
             let mut hashmap = FLOWS.lock().unwrap();
-            let mut flow = hashmap.entry(flow_index).or_insert($TYPE::new());
+            let flow = hashmap.entry(flow_index).or_insert($TYPE::new());
             unsafe {
                 flow.claim_l4_info(&*packet, t2plugin::getflow(flow_index));
             }
@@ -647,7 +648,7 @@ macro_rules! t2plugin {
             }
             let mut hashmap = FLOWS.lock().unwrap();
             {
-                let mut flow = hashmap.entry(flow_index).or_insert($TYPE::new());
+                let flow = hashmap.entry(flow_index).or_insert($TYPE::new());
                 flow.on_flow_terminate(t2plugin::getflow(flow_index));
             }
             hashmap.remove(&flow_index);

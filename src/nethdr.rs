@@ -17,7 +17,6 @@ use std::mem;
 use std::net::{Ipv4Addr, Ipv6Addr};
 use std::slice;
 use libc::{c_void, c_char};
-use pcap;
 use c_ulong;
 
 fn ntohs(u: u16) -> u16 {
@@ -28,10 +27,20 @@ fn ntohl(u: u32) -> u32 {
     u32::from_be(u)
 }
 
+/// C timeval structure
 #[repr(C)]
 struct Timeval {
     tv_sec: c_ulong,
     tv_usec: c_ulong,
+}
+
+/// Pcap packet header
+#[repr(C, packed)]
+struct PacketHeader {
+    tv_sec: u32,
+    tv_usec: u32,
+    snap_len: u32,
+    orig_len: u32,
 }
 
 /// Represents a packet with its different headers and associated lengths.
@@ -41,7 +50,7 @@ pub struct Packet {
     hdr_desc: [c_char; 128],
 
     raw_packet: *const u8,
-    pcap_pkthdr: *const pcap::PacketHeader,
+    pcap_pkthdr: *const PacketHeader,
     l2_header: *const c_void,
     vlans: *const u32,
     ether_llc: *const c_void,
@@ -91,6 +100,8 @@ pub struct Packet {
     pub packet_l2_len: u16,
     /// On wire full packet length (from the per-packet PCAP header).
     pub packet_raw_len: u16,
+    /// Packet payload length: layer 7 length.
+    pub packet_l7_len: u16,
     /// Packet length depending on Tranalyzer2 `PACKETLENGTH` value, see `networkHeaders.h` for details.
     pub packet_len: u16,
 
@@ -117,8 +128,8 @@ impl Packet {
     /// Timestamp of when the packet was captured (as the number of seconds since 1970-01-01).
     pub fn timestamp(&self) -> f64 {
         unsafe {
-            let ts = (*self.pcap_pkthdr).ts;
-            ts.tv_sec as f64 + (ts.tv_usec as f64 / 1000000.0)
+            let ref hdr = *self.pcap_pkthdr;
+            hdr.tv_sec as f64 + (hdr.tv_usec as f64 / 1000000.0)
         }
     }
 
