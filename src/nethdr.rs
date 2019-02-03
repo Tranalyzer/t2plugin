@@ -696,12 +696,12 @@ pub struct Flow {
 impl Flow {
     /// Timestamp of the first seen packet (as the number of seconds since 1970-01-01).
     pub fn first_seen(&self) -> f64 {
-        let ts = &self.first_seen;
+        let ts = unsafe{ &self.first_seen };
         ts.tv_sec as f64 + (ts.tv_usec as f64 / 1000000.0)
     }
     /// Timestamp of the last seen packet (as the number of seconds since 1970-01-01).
     pub fn last_seen(&self) -> f64 {
-        let ts = &self.last_seen;
+        let ts = unsafe{ &self.last_seen };
         ts.tv_sec as f64 + (ts.tv_usec as f64 / 1000000.0)
     }
     /// Duration of this flow in seconds.
@@ -710,7 +710,7 @@ impl Flow {
     /// duration before the flow termination, use [`first_seen`](#method.first_seen) and
     /// [`last_seen`](#method.last_seen).
     pub fn duration(&self) -> f64 {
-        let ts = &self.duration;
+        let ts = unsafe{ &self.duration };
         ts.tv_sec as f64 + (ts.tv_usec as f64 / 1000000.0)
     }
 
