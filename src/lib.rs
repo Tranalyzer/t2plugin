@@ -610,7 +610,8 @@ macro_rules! t2plugin {
                 println!("ERROR: claimLayer2Information called with flowIndex={}", flow_index);
             } else {
                 let mut hashmap = FLOWS.lock().unwrap();
-                let plugin = hashmap.entry(flow_index).or_insert($TYPE::new());
+                // let plugin = hashmap.entry(flow_index).or_insert($TYPE::new());
+                let plugin = hashmap.get_mut(&flow_index).expect("no plugin in hash (l2)");
                 unsafe {
                     $TYPE::claim_l2_info(&*packet, Some(plugin), Some(t2plugin::getflow(flow_index)));
                 }
@@ -633,7 +634,8 @@ macro_rules! t2plugin {
                 return;
             }
             let mut hashmap = FLOWS.lock().unwrap();
-            let flow = hashmap.entry(flow_index).or_insert($TYPE::new());
+            // let flow = hashmap.entry(flow_index).or_insert($TYPE::new());
+            let flow = hashmap.get_mut(&flow_index).expect("no flow in hash (l4)");
             unsafe {
                 flow.claim_l4_info(&*packet, t2plugin::getflow(flow_index));
             }
@@ -648,7 +650,8 @@ macro_rules! t2plugin {
             }
             let mut hashmap = FLOWS.lock().unwrap();
             {
-                let flow = hashmap.entry(flow_index).or_insert($TYPE::new());
+                // let flow = hashmap.entry(flow_index).or_insert($TYPE::new());
+                let flow = hashmap.get_mut(&flow_index).expect("no flow in hash (terminate)");
                 flow.on_flow_terminate(t2plugin::getflow(flow_index));
             }
             hashmap.remove(&flow_index);
