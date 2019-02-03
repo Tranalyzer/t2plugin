@@ -16,7 +16,9 @@
 use std::mem;
 use std::net::{Ipv4Addr, Ipv6Addr};
 use std::slice;
-use libc::{c_void, c_char};
+use libc::c_void;
+#[cfg(feature = "T2_PRI_HDRDESC")]
+use libc::c_char;
 use c_ulong;
 
 fn ntohs(u: u16) -> u16 {
@@ -48,6 +50,8 @@ struct PacketHeader {
 pub struct Packet {
     #[cfg(feature = "T2_PRI_HDRDESC")]
     hdr_desc: [c_char; 128],
+    #[cfg(feature = "T2_PRI_HDRDESC")]
+    hdr_desc_pos: u16,
 
     raw_packet: *const u8,
     end_packet: *const u8,
@@ -89,22 +93,25 @@ pub struct Packet {
     pub l3_hdr_len: u16,
     /// Length of the layer 4 header (TCP, UDP, ICMP, ...).
     pub l4_hdr_len: u16,
+    /// Packet snapped length
+    pub snap_len: u32,
     /// Packet snapped length starting from layer 2.
-    pub snap_l2_len: u16,
+    pub snap_l2_len: u32,
     /// Packet snapped length starting from layer 3.
-    pub snap_l3_len: u16,
+    pub snap_l3_len: u32,
+    /// On wire full packet length (from the per-packet PCAP header).
+    pub packet_raw_len: u32,
+    /// On wire packet length starting from layer2.
+    pub packet_l2_len: u32,
+    /// Packet length depending on Tranalyzer2 `PACKETLENGTH` value, see `networkHeaders.h` for details.
+    pub packet_len: u32,
+
     /// Packet snapped length starting from layer 4.
     pub snap_l4_len: u16,
     /// Packet snapped length starting from layer 7.
     pub snap_l7_len: u16,
-    /// On wire packet length starting from layer2.
-    pub packet_l2_len: u16,
-    /// On wire full packet length (from the per-packet PCAP header).
-    pub packet_raw_len: u16,
     /// Packet payload length: layer 7 length.
     pub packet_l7_len: u16,
-    /// Packet length depending on Tranalyzer2 `PACKETLENGTH` value, see `networkHeaders.h` for details.
-    pub packet_len: u16,
 
     /// Source port in host order.
     pub src_port: u16,
@@ -112,6 +119,8 @@ pub struct Packet {
     pub dst_port: u16,
     /// Inner VLAN ID
     pub inner_vlan: u16,
+    /// Outer type of the layer 2 header.
+    pub outer_l2_type: u16,
     /// Type of the layer 2 header.
     pub l2_type: u16,
     /// Type of the layer 3 header as defined in [`L3Type`](nethdr/enum.L3Type.html).
@@ -251,7 +260,7 @@ impl Packet {
             return &[];
         }
         unsafe {
-            slice::from_raw_parts(ptr, (self.snap_l3_len - self.snap_l4_len) as usize)
+            slice::from_raw_parts(ptr, (self.snap_l3_len - (self.snap_l4_len as u32)) as usize)
         }
     }
 
@@ -660,8 +669,7 @@ pub struct Flow {
     #[cfg(not(feature = "IPV6_ACTIVATE"))]
     last_frag_ipid: u16,
 
-    #[cfg(feature = "MULTIPKTSUP")]
-    last_ipid: u16,
+    last_ipid: u32,
 
     last_trdo: u16, // teredo
 
