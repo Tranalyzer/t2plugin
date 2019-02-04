@@ -289,7 +289,7 @@ impl Packet {
 }
 
 /// Type of layer 3 headers.
-#[derive(PartialEq)]
+#[derive(Debug,PartialEq)]
 pub enum L3Type {
     /// Internet Protocol version 4
     IPv4,
@@ -311,7 +311,7 @@ impl L3Type {
 }
 
 /// Type of layer 4 headers.
-#[derive(PartialEq)]
+#[derive(Debug,PartialEq)]
 pub enum L4Type {
     /// Internet Control Message
     ICMP,
