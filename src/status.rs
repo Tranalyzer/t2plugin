@@ -55,6 +55,5 @@ pub const TIMEJUMP            : u64 = 0x0008000000000000;  // Time slip possibly
 pub const LIVEXTR             : u64 = 0x0010000000000000;  // Flow should be extracted by the liveXtr plugin
 pub const PCAPSNPD            : u64 = 0x8000000000000000;  // PCAP packet length > MAX_MTU in ioBuffer.h, caplen reduced
 
-pub const SNAPLENGTH          : u64 = (L2SNAPLENGTH | L3SNAPLENGTH);
-pub const L2_MPLS             : u64 = (L2_MPLS_UCAST | L2_MPLS_MCAST);
-
+pub const SNAPLENGTH          : u64 = L2SNAPLENGTH | L3SNAPLENGTH;
+pub const L2_MPLS             : u64 = L2_MPLS_UCAST | L2_MPLS_MCAST;

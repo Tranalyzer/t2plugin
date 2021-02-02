@@ -40,8 +40,11 @@
 
 extern crate libc;
 
-/// Contains the definition of a [`Flow`](nethdr/struct.Flow.html), a
-/// [`Packet`](nethdr/struct.Packet.html) and the different protocol headers.
+/// Contains the definition of a [`Flow`](flow/struct.Flow.html).
+pub mod flow;
+/// Contains the definition of a [`Packet`](packet/struct.Packet.html).
+pub mod packet;
+/// Contains the definition of the different protocol headers (IP, TCP, UDP, ...).
 pub mod nethdr;
 /// Contains the [`SliceReader`](slread/struct.SliceReader.html) which allows to easily read
 /// integers and strings from a byte slice.
@@ -51,7 +54,8 @@ pub mod slread;
 mod status;
 pub use status::*;
 
-use nethdr::{Packet, Flow};
+use packet::Packet;
+use flow::Flow;
 use libc::c_char;
 use std::mem;
 use std::iter::Product;
@@ -66,7 +70,7 @@ pub type c_ulong = u64;
 #[cfg(target_arch = "x86")]
 pub type c_ulong = u32;
 
-/// `flow_index` value representing a non-existing [`Flow`](nethdr/struct.Flow.html).
+/// `flow_index` value representing a non-existing [`Flow`](flow/struct.Flow.html).
 #[cfg(target_arch = "x86_64")]
 pub const HASHTABLE_ENTRY_NOT_FOUND: c_ulong = std::u64::MAX;
 #[cfg(target_arch = "x86")]
@@ -149,7 +153,7 @@ pub fn hashchaintable_size() -> usize {
     }
 }
 
-/// Returns the [`Flow`](nethdr/struct.Flow.html) structure of the flow with `flow_index=index`.
+/// Returns the [`Flow`](flow/struct.Flow.html) structure of the flow with `flow_index=index`.
 ///
 /// Corresponds to Tranalyzer2 internal `flows[index]`.
 ///
@@ -157,7 +161,7 @@ pub fn hashchaintable_size() -> usize {
 ///
 /// ```
 /// use t2plugin::{getflow, HASHTABLE_ENTRY_NOT_FOUND};
-/// use t2plugin::nethdr::Flow;
+/// use t2plugin::flow::Flow;
 ///
 /// fn get_opposite_flow<'a>(flow: &'a Flow) -> Option<&'a mut Flow> {
 ///     match flow.opposite_flow_index {

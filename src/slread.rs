@@ -51,9 +51,9 @@ impl error::Error for Error {
         }
     }
 
-    fn cause(&self) -> Option<&error::Error> {
+    fn cause(&self) -> Option<&dyn error::Error> {
         match *self {
-            Error::IoError(ref err) => Some(err as &error::Error),
+            Error::IoError(ref err) => Some(err as &dyn error::Error),
             _ => None,
         }
     }
@@ -165,7 +165,7 @@ impl<'a> SliceReader<'a> {
     ///
     /// ```
     /// use t2plugin::slread::SliceReader;
-    /// use t2plugin::nethdr::Packet;
+    /// use t2plugin::packet::Packet;
     /// 
     /// ...
     /// let slr = SliceReader::new(packet.l7_header());
@@ -236,7 +236,7 @@ impl<'a> SliceReader<'a> {
     ///
     /// ```
     /// use t2plugin::slread::SliceReader;
-    /// use t2plugin::nethdr::Packet;
+    /// use t2plugin::packet::Packet;
     /// 
     /// ...
     /// let slr = SliceReader::new(packet.l7_header());
@@ -306,7 +306,7 @@ impl<'a> SliceReader<'a> {
     ///
     /// ```
     /// use t2plugin::slread::{SliceReader, TrimBytes};
-    /// use t2plugin::nethdr::Packet;
+    /// use t2plugin::packet::Packet;
     ///
     /// let slr = SliceReader::new(packet.l7_header());
     /// // read the packet payload line by line
@@ -374,7 +374,7 @@ pub trait TrimBytes {
     ///
     /// ```
     /// use t2plugin::slread::{SliceReader, TrimBytes};
-    /// use t2plugin::nethdr::Packet;
+    /// use t2plugin::packet::Packet;
     ///
     /// let slr = SliceReader::new(packet.l7_header());
     /// // read the first line of the packet payload and trim it

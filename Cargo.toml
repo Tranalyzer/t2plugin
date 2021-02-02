@@ -4,7 +4,7 @@ version = "0.8.1"
 authors = ["Tranalyzer2 dev. team"]
 
 [dependencies]
-libc = "0.2.33"
+libc = "0.2.84"
 
 [features]
 ETH_ACTIVATE = []
