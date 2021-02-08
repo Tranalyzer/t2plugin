@@ -13,9 +13,11 @@
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  */
 
-use std::net::{Ipv4Addr, Ipv6Addr};
+use std::net::{IpAddr, Ipv4Addr, Ipv6Addr};
 use libc::c_void;
 use c_ulong;
+use status::{L2_IPV4, L2_IPV6};
+use nethdr::T2IpAddr;
 
 /// C timeval structure
 #[repr(C)]
@@ -34,20 +36,20 @@ pub struct Flow {
     first_seen: Timeval,
     duration: Timeval,
 
-    #[cfg(feature = "IPV6_ACTIVATE")]
-    src_ip: [u8; 16],
-    #[cfg(feature = "IPV6_ACTIVATE")]
-    dst_ip: [u8; 16],
-    #[cfg(not(feature = "IPV6_ACTIVATE"))]
-    src_ip: u32,
-    #[cfg(not(feature = "IPV6_ACTIVATE"))]
-    dst_ip: u32,
+    #[cfg(any(feature = "IPV6_ACTIVATE", feature = "IPV6_DUALMODE"))]
+    src_ip: T2IpAddr,
+    #[cfg(any(feature = "IPV6_ACTIVATE", feature = "IPV6_DUALMODE"))]
+    dst_ip: T2IpAddr,
+    #[cfg(not(any(feature = "IPV6_ACTIVATE", feature = "IPV6_DUALMODE")))]
+    src_ip: [u8; 4],
+    #[cfg(not(any(feature = "IPV6_ACTIVATE", feature = "IPV6_DUALMODE")))]
+    dst_ip: [u8; 4],
 
     #[cfg(feature = "ETH_ACTIVATE")]
     eth_dhost: [u8; 6],
     #[cfg(feature = "ETH_ACTIVATE")]
     eth_shost: [u8; 6],
-    #[cfg(feature = "ETH_ACTIVATE")]
+    #[cfg(any(feature = "ETH_ACTIVATE", feature = "IPV6_DUALMODE"))]
     eth_type: u16,
 
     /// flow inner VLAN tag
@@ -74,9 +76,9 @@ pub struct Flow {
     #[cfg(all(feature = "SCTP_ACTIVATE", feature = "SCTP_STATFINDEX"))]
     sctp_findex: c_ulong,
 
-    #[cfg(feature = "IPV6_ACTIVATE")]
+    #[cfg(any(feature = "IPV6_ACTIVATE", feature = "IPV6_DUALMODE"))]
     last_frag_ipid: u32,
-    #[cfg(not(feature = "IPV6_ACTIVATE"))]
+    #[cfg(not(any(feature = "IPV6_ACTIVATE", feature = "IPV6_DUALMODE")))]
     last_frag_ipid: u16,
 
     last_ipid: u32,
@@ -124,56 +126,69 @@ impl Flow {
         ts.tv_sec as f64 + (ts.tv_usec as f64 / 1000000.0)
     }
 
-    /// Returns source IPv4 address for an IPv4 flow. None for an IPv6 flow.
-    #[cfg(not(feature = "IPV6_ACTIVATE"))]
-    pub fn src_ip4(&self) -> Option<Ipv4Addr> {
-        Some(Ipv4Addr::from(u32::from_be(self.src_ip)))
-    }
-    /// Returns source IPv4 address for an IPv4 flow. None for an IPv6 flow.
-    #[cfg(feature = "IPV6_ACTIVATE")]
-    pub fn src_ip4(&self) -> Option<Ipv4Addr> {
-        None
-    }
-    /// Returns destination IPv4 address for an IPv4 flow. None for an IPv6 flow.
-    #[cfg(not(feature = "IPV6_ACTIVATE"))]
-    pub fn dst_ip4(&self) -> Option<Ipv4Addr> {
-        Some(Ipv4Addr::from(u32::from_be(self.dst_ip)))
-    }
-    /// Returns destination IPv4 address for an IPv4 flow. None for an IPv6 flow.
-    #[cfg(feature = "IPV6_ACTIVATE")]
-    pub fn dst_ip4(&self) -> Option<Ipv4Addr> {
-        None
+    /// Returns source IP address for IPv4 or IPv6 flow. None for non IP flow.
+    #[cfg(any(feature = "IPV6_ACTIVATE", feature = "IPV6_DUALMODE"))]
+    pub fn src_ip(&self) -> Option<IpAddr> {
+        if (self.status & L2_IPV4) != 0 {
+            Some(IpAddr::V4(Ipv4Addr::from(unsafe { self.src_ip.ipv4 })))
+        } else if (self.status & L2_IPV6) != 0 {
+            Some(IpAddr::V6(Ipv6Addr::from(unsafe { self.src_ip.ipv6 })))
+        } else {
+            None
+        }
     }
 
-    /// Returns source IPv6 address for an IPv6 flow. None for an IPv4 flow.
-    #[cfg(feature = "IPV6_ACTIVATE")]
-    pub fn src_ip6(&self) -> Option<Ipv6Addr> {
-        Some(Ipv6Addr::from(self.src_ip))
-    }
-    /// Returns source IPv6 address for an IPv6 flow. None for an IPv4 flow.
-    #[cfg(not(feature = "IPV6_ACTIVATE"))]
-    pub fn src_ip6(&self) -> Option<Ipv6Addr> {
-        None
-    }
-    /// Returns destination IPv6 address for an IPv6 flow. None for an IPv4 flow.
-    #[cfg(feature = "IPV6_ACTIVATE")]
-    pub fn dst_ip6(&self) -> Option<Ipv6Addr> {
-        Some(Ipv6Addr::from(self.dst_ip))
-    }
-    /// Returns destination IPv6 address for an IPv6 flow. None for an IPv4 flow.
-    #[cfg(not(feature = "IPV6_ACTIVATE"))]
-    pub fn dst_ip6(&self) -> Option<Ipv6Addr> {
-        None
+    /// Returns source IP address for IPv4 flow. None for IPv6 or non IP flow.
+    #[cfg(not(any(feature = "IPV6_ACTIVATE", feature = "IPV6_DUALMODE")))]
+    pub fn src_ip(&self) -> Option<IpAddr> {
+        if (self.status & L2_IPV4) != 0 {
+            Some(IpAddr::V4(Ipv4Addr::from(self.src_ip)))
+        } else {
+            None
+        }
     }
 
-    /// Returns the IP version of this flow (4 or 6).
-    #[cfg(not(feature = "IPV6_ACTIVATE"))]
-    pub fn ip_ver(&self) -> u8 {
-        4
+    /// Returns destination IP address for IPv4 or IPv6 flow. None for non IP flow.
+    #[cfg(any(feature = "IPV6_ACTIVATE", feature = "IPV6_DUALMODE"))]
+    pub fn dst_ip(&self) -> Option<IpAddr> {
+        if (self.status & L2_IPV4) != 0 {
+            Some(IpAddr::V4(Ipv4Addr::from(unsafe { self.dst_ip.ipv4 })))
+        } else if (self.status & L2_IPV6) != 0 {
+            Some(IpAddr::V6(Ipv6Addr::from(unsafe { self.dst_ip.ipv6 })))
+        } else {
+            None
+        }
     }
-    /// Returns the IP version of this flow (4 or 6).
-    #[cfg(feature = "IPV6_ACTIVATE")]
+
+    /// Returns destination IP address for IPv4 flow. None for IPv6 or non IP flow.
+    #[cfg(not(any(feature = "IPV6_ACTIVATE", feature = "IPV6_DUALMODE")))]
+    pub fn dst_ip(&self) -> Option<IpAddr> {
+        if (self.status & L2_IPV4) != 0 {
+            Some(IpAddr::V4(Ipv4Addr::from(self.dst_ip)))
+        } else {
+            None
+        }
+    }
+
+    /// Returns the IP version of this flow (4 or 6). Returns 0 if not IP flow.
+    #[cfg(any(feature = "IPV6_ACTIVATE", feature = "IPV6_DUALMODE"))]
     pub fn ip_ver(&self) -> u8 {
-        self.ip_ver
+        if (self.status & L2_IPV4) != 0 {
+            4
+        } else if (self.status & L2_IPV6) != 0 {
+            6
+        } else {
+            0
+        }
+    }
+
+    /// Returns the IP version of this flow (4 or 6). Returns 0 if not IP flow.
+    #[cfg(not(any(feature = "IPV6_ACTIVATE", feature = "IPV6_DUALMODE")))]
+    pub fn ip_ver(&self) -> u8 {
+        if (self.status & L2_IPV4) != 0 {
+            4
+        } else {
+            0
+        }
     }
 }

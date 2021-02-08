@@ -33,6 +33,13 @@ impl EthernetHeader {
     }
 }
 
+/// Tranalyzer2 ipAddr_t IPv6/IPv4 dual mode header (for internal use only)
+#[repr(C, packed)]
+pub(super) union T2IpAddr {
+    pub(super) ipv4: [u8; 4],
+    pub(super) ipv6: [u8; 16],
+}
+
 /// IPv4 header: https://tools.ietf.org/html/rfc791#section-3.1
 #[repr(C, packed)]
 pub struct Ip4Header {

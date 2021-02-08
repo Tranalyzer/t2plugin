@@ -9,6 +9,7 @@ libc = "0.2.84"
 [features]
 ETH_ACTIVATE = []
 IPV6_ACTIVATE = []
+IPV6_DUALMODE = []
 SCTP_ACTIVATE = []
 SCTP_STATFINDEX = []
 MULTIPKTSUP = []
