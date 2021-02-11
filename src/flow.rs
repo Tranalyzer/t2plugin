@@ -17,7 +17,7 @@ use std::net::{IpAddr, Ipv4Addr, Ipv6Addr};
 use libc::c_void;
 use c_ulong;
 use status::{L2_IPV4, L2_IPV6};
-use nethdr::T2IpAddr;
+use nethdr::{L4Type, T2IpAddr};
 
 /// C timeval structure
 #[repr(C)]
@@ -63,9 +63,7 @@ pub struct Flow {
     #[cfg(feature = "SCTP_ACTIVATE")]
     sctp_strm: u16,
 
-    /// [Protocol number](https://www.iana.org/assignments/protocol-numbers/protocol-numbers.xhtml)
-    /// of the layer 4 header.
-    pub l4_proto: u8,
+    l4_proto: u8,
 
     /// Unique flow index: second column of Tranalyzer2 flow output.
     pub findex: u64,
@@ -168,6 +166,11 @@ impl Flow {
         } else {
             None
         }
+    }
+
+    /// Type of the layer 4 header as defined in [`L4Type`](nethdr/enum.L4Type.html).
+    pub fn l4_proto(&self) -> L4Type {
+        L4Type::from_u8(self.l4_proto)
     }
 
     /// Returns the IP version of this flow (4 or 6). Returns 0 if not IP flow.

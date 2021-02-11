@@ -26,10 +26,9 @@ pub struct EthernetHeader {
 }
 
 impl EthernetHeader {
-    /// [`EtherType`](https://www.iana.org/assignments/ieee-802-numbers/ieee-802-numbers.xhtml) of
-    /// the header following the Ethernet header.
-    pub fn eth_type(&self) -> u16 {
-        u16::from_be(self.eth_type)
+    /// Type of the header following the Ethernet header as defined in [`L3Type`](nethdr/enum.L3Type.html).
+    pub fn eth_type(&self) -> L3Type {
+        L3Type::from_u16(u16::from_be(self.eth_type))
     }
 }
 
@@ -51,9 +50,7 @@ pub struct Ip4Header {
     ip_off: u16,
     /// Packet time to live
     pub ttl: u8,
-    /// [Protocol number](https://www.iana.org/assignments/protocol-numbers/protocol-numbers.xhtml)
-    /// of the header following the IPv4 header.
-    pub proto: u8,
+    proto: u8,
     checksum: u16,
     src: u32,
     dst: u32,
@@ -80,6 +77,11 @@ impl Ip4Header {
         u16::from_be(self.ip_id)
     }
 
+    /// Type of the layer 4 header as defined in [`L4Type`](nethdr/enum.L4Type.html).
+    pub fn proto(&self) -> L4Type {
+        L4Type::from_u8(self.proto)
+    }
+
     /// IPv4 source address
     pub fn src_ip(&self) -> Ipv4Addr {
         Ipv4Addr::from(u32::from_be(self.src))
@@ -96,9 +98,7 @@ impl Ip4Header {
 pub struct Ip6Header {
     vcl: u32,
     payload_len: u16,
-    /// [Protocol number](https://www.iana.org/assignments/protocol-numbers/protocol-numbers.xhtml)
-    /// of the header following the IPv6 header.
-    pub next_hdr: u8,
+    next_hdr: u8,
     /// Hop limit, equivalent of IPv4 TTL.
     pub hop_limit: u8,
     src: [u8; 16],
@@ -125,6 +125,11 @@ impl Ip6Header {
     /// extension headers).
     pub fn payload_len(&self) -> u16 {
         u16::from_be(self.payload_len)
+    }
+
+    /// Type of the header following the IPv6 header as defined in [`L4Type`](nethdr/enum.L4Type.html).
+    pub fn next_hdr(&self) -> L4Type {
+        L4Type::from_u8(self.next_hdr)
     }
 
     /// IPv6 source address
@@ -268,5 +273,107 @@ impl IcmpHeader {
     /// messages.
     pub fn path_mtu(&self) -> u16 {
         (u32::from_be(self.data) & 0xffff) as u16
+    }
+}
+
+/// Type of layer 3 headers.
+#[allow(non_camel_case_types)]
+#[derive(Debug,PartialEq)]
+pub enum L3Type {
+    /// Internet Protocol version 4
+    IPv4,
+    /// Internet Protocol version 6
+    IPv6,
+    /// Address Resolution Protocol (ARP)
+    ARP,
+    /// IEEE 802.1Q Customer VLAN Tag Type
+    VLAN,
+    /// Link Layer Discovery Protocol (LLDP)
+    LLDP,
+    /// MPLS
+    MPLS,
+    /// MPLS multicast
+    MPLS_MCAST,
+    /// PPP over Ethernet (PPPoE) Discovery Stage
+    PPPOE_DISCO,
+    /// PPP over Ethernet (PPPoE) Session Stage
+    PPPOE,
+    /// LLC jumbo frame (draft-ietf-isis-ext-eth-01)
+    JUMBO_LLC,
+    /// Other protocol not yet implemented in this module. The argument contains an
+    /// [`EtherType`](https://www.iana.org/assignments/ieee-802-numbers/ieee-802-numbers.xhtml).
+    OTHER(u16),
+}
+
+impl L3Type {
+    pub fn from_u16(val: u16) -> L3Type {
+        match val {
+            0x0800 => L3Type::IPv4,
+            0x0806 => L3Type::ARP,
+            0x8100 => L3Type::VLAN,
+            0x86dd => L3Type::IPv6,
+            0x8847 => L3Type::MPLS,
+            0x8848 => L3Type::MPLS_MCAST,
+            0x8863 => L3Type::PPPOE_DISCO,
+            0x8864 => L3Type::PPPOE,
+            0x8870 => L3Type::JUMBO_LLC,
+            0x88cc => L3Type::LLDP,
+            v      => L3Type::OTHER(v),
+        }
+    }
+}
+
+/// Type of layer 4 headers.
+#[derive(Debug,PartialEq)]
+pub enum L4Type {
+    /// Internet Control Message
+    ICMP,
+    /// Internet Group Management
+    IGMP,
+    /// Transmission Control
+    TCP,
+    /// Exterior Gateway Protocol
+    EGP,
+    /// Interior Gateway Protocol (Cisco IGRP)
+    IGP,
+    /// User Datagram
+    UDP,
+    /// Generic Routing Encapsulation
+    GRE,
+    /// IPsec Encap Security Payload
+    ESP,
+    /// IPsec Authentication Header
+    AH,
+    /// ICMP for IPv6
+    ICMPv6,
+    /// IP-within-IP Encapsulation Protocol
+    IPIP,
+    /// Ethernet-within-IP Encapsulation
+    ETHERIP,
+    /// Layer Two Tunneling Protocol
+    L2TP,
+    /// Other protocol not yet implemented in this module. The argument contains a
+    /// [`Protocol number`](https://www.iana.org/assignments/protocol-numbers/protocol-numbers.xhtml).
+    OTHER(u8),
+}
+
+impl L4Type {
+    pub fn from_u8(val: u8) -> L4Type {
+        match val {
+            1   => L4Type::ICMP,
+            2   => L4Type::IGMP,
+            6   => L4Type::TCP,
+            8   => L4Type::EGP,
+            9   => L4Type::IGP,
+            17  => L4Type::UDP,
+            47  => L4Type::GRE,
+            50  => L4Type::ESP,
+            51  => L4Type::AH,
+            58  => L4Type::ICMPv6,
+            94  => L4Type::IPIP,
+            97  => L4Type::ETHERIP,
+            115 => L4Type::L2TP,
+            v   => L4Type::OTHER(v),
+        }
     }
 }

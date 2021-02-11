@@ -18,7 +18,7 @@ use std::slice;
 use libc::c_void;
 #[cfg(feature = "T2_PRI_HDRDESC")]
 use libc::c_char;
-use nethdr::{EthernetHeader, Ip4Header, Ip6Header, UdpHeader, TcpHeader, IcmpHeader, T2IpAddr};
+use nethdr::{EthernetHeader, Ip4Header, Ip6Header, UdpHeader, TcpHeader, IcmpHeader, L3Type, L4Type, T2IpAddr};
 
 /// Pcap packet header
 #[repr(C, packed)]
@@ -109,7 +109,7 @@ pub struct Packet {
     pub outer_l2_type: u16,
     /// Type of the layer 2 header.
     pub l2_type: u16,
-    /// Type of the layer 3 header as defined in [`L3Type`](packet/enum.L3Type.html).
+    /// Type of the layer 3 header as defined in [`L3Type`](nethdr/enum.L3Type.html).
     l3_type: u16,
     /// Per packet status bits.
     pub status: u64,
@@ -146,7 +146,7 @@ pub struct Packet {
     #[cfg(feature = "FLOW_AGGREGATION")]
     l4_type_c: u8,
 
-    /// Type of the layer 4 header as defined in [`L4Type`](packet/enum.L4Type.html).
+    /// Type of the layer 4 header as defined in [`L4Type`](nethdr/enum.L4Type.html).
     l4_type: u8,
 
     vlan_hdr_count: u8,
@@ -297,90 +297,13 @@ impl Packet {
         }
     }
 
-    /// Type of the layer 3 header as defined in [`L3Type`](packet/enum.L3Type.html).
+    /// Type of the layer 3 header as defined in [`L3Type`](nethdr/enum.L3Type.html).
     pub fn l3_type(&self) -> L3Type {
         L3Type::from_u16(self.l3_type)
     }
 
-    /// Type of the layer 4 header as defined in [`L4Type`](packet/enum.L4Type.html).
+    /// Type of the layer 4 header as defined in [`L4Type`](nethdr/enum.L4Type.html).
     pub fn l4_type(&self) -> L4Type {
         L4Type::from_u8(self.l4_type)
-    }
-}
-
-/// Type of layer 3 headers.
-#[derive(Debug,PartialEq)]
-pub enum L3Type {
-    /// Internet Protocol version 4
-    IPv4,
-    /// Internet Protocol version 6
-    IPv6,
-    /// Other protocol not yet implemented in this module. The argument contains an
-    /// [`EtherType`](https://www.iana.org/assignments/ieee-802-numbers/ieee-802-numbers.xhtml).
-    OTHER(u16),
-}
-
-impl L3Type {
-    fn from_u16(val: u16) -> L3Type {
-        match val {
-            0x0800 => L3Type::IPv4,
-            0x86dd => L3Type::IPv6,
-            v      => L3Type::OTHER(v),
-        }
-    }
-}
-
-/// Type of layer 4 headers.
-#[derive(Debug,PartialEq)]
-pub enum L4Type {
-    /// Internet Control Message
-    ICMP,
-    /// Internet Group Management
-    IGMP,
-    /// Transmission Control
-    TCP,
-    /// Exterior Gateway Protocol
-    EGP,
-    /// Interior Gateway Protocol (Cisco IGRP)
-    IGP,
-    /// User Datagram
-    UDP,
-    /// Generic Routing Encapsulation
-    GRE,
-    /// IPsec Encap Security Payload
-    ESP,
-    /// IPsec Authentication Header
-    AH,
-    /// ICMP for IPv6
-    ICMPv6,
-    /// IP-within-IP Encapsulation Protocol
-    IPIP,
-    /// Ethernet-within-IP Encapsulation
-    ETHERIP,
-    /// Layer Two Tunneling Protocol
-    L2TP,
-    /// Other protocol not yet implemented in this module. The argument contains an
-    /// [`Protocol number`](https://www.iana.org/assignments/protocol-numbers/protocol-numbers.xhtml).
-    OTHER(u8),
-}
-
-impl L4Type {
-    fn from_u8(val: u8) -> L4Type {
-        match val {
-            1   => L4Type::ICMP,
-            2   => L4Type::IGMP,
-            6   => L4Type::TCP,
-            8   => L4Type::EGP,
-            9   => L4Type::IGP,
-            17  => L4Type::UDP,
-            47  => L4Type::GRE,
-            50  => L4Type::ESP,
-            51  => L4Type::AH,
-            58  => L4Type::ICMPv6,
-            94  => L4Type::IPIP,
-            97  => L4Type::ETHERIP,
-            115 => L4Type::L2TP,
-            v   => L4Type::OTHER(v),
-        }
     }
 }
