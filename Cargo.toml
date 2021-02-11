@@ -1,6 +1,6 @@
 [package]
 name = "t2plugin"
-version = "0.8.1"
+version = "0.8.8"
 authors = ["Tranalyzer2 dev. team"]
 
 [dependencies]
@@ -14,3 +14,6 @@ SCTP_ACTIVATE = []
 SCTP_STATFINDEX = []
 MULTIPKTSUP = []
 T2_PRI_HDRDESC = []
+SUBNET_INIT = []
+FLOW_LIFETIME = []
+FLOW_AGGREGATION = []

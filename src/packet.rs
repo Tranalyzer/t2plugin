@@ -18,7 +18,7 @@ use std::slice;
 use libc::c_void;
 #[cfg(feature = "T2_PRI_HDRDESC")]
 use libc::c_char;
-use nethdr::{EthernetHeader, Ip4Header, Ip6Header, UdpHeader, TcpHeader, IcmpHeader};
+use nethdr::{EthernetHeader, Ip4Header, Ip6Header, UdpHeader, TcpHeader, IcmpHeader, T2IpAddr};
 
 /// Pcap packet header
 #[repr(C, packed)]
@@ -36,6 +36,8 @@ pub struct Packet {
     hdr_desc: [c_char; 128],
     #[cfg(feature = "T2_PRI_HDRDESC")]
     hdr_desc_pos: u16,
+    #[cfg(feature = "T2_PRI_HDRDESC")]
+    num_hdr_desc: u16,
 
     raw_packet: *const u8,
     end_packet: *const u8,
@@ -77,14 +79,14 @@ pub struct Packet {
     pub l3_hdr_len: u16,
     /// Length of the layer 4 header (TCP, UDP, ICMP, ...).
     pub l4_hdr_len: u16,
+    /// On wire full packet length (from the per-packet PCAP header).
+    pub packet_raw_len: u32,
     /// Packet snapped length
     pub snap_len: u32,
     /// Packet snapped length starting from layer 2.
     pub snap_l2_len: u32,
     /// Packet snapped length starting from layer 3.
     pub snap_l3_len: u32,
-    /// On wire full packet length (from the per-packet PCAP header).
-    pub packet_raw_len: u32,
     /// On wire packet length starting from layer2.
     pub packet_l2_len: u32,
     /// Packet length depending on Tranalyzer2 `PACKETLENGTH` value, see `networkHeaders.h` for details.
@@ -111,6 +113,39 @@ pub struct Packet {
     l3_type: u16,
     /// Per packet status bits.
     pub status: u64,
+
+    #[cfg(feature = "FLOW_LIFETIME")]
+    findex: u64,
+
+    #[cfg(any(feature = "IPV6_ACTIVATE", feature = "IPV6_DUALMODE"))]
+    src_ip: T2IpAddr,
+    #[cfg(any(feature = "IPV6_ACTIVATE", feature = "IPV6_DUALMODE"))]
+    dst_ip: T2IpAddr,
+    #[cfg(not(any(feature = "IPV6_ACTIVATE", feature = "IPV6_DUALMODE")))]
+    src_ip: [u8; 4],
+    #[cfg(not(any(feature = "IPV6_ACTIVATE", feature = "IPV6_DUALMODE")))]
+    dst_ip: [u8; 4],
+
+    #[cfg(all(feature = "FLOW_AGGREGATION", any(feature = "IPV6_ACTIVATE", feature = "IPV6_DUALMODE")))]
+    src_ip_c: T2IpAddr,
+    #[cfg(all(feature = "FLOW_AGGREGATION", any(feature = "IPV6_ACTIVATE", feature = "IPV6_DUALMODE")))]
+    dst_ip_c: T2IpAddr,
+    #[cfg(all(feature = "FLOW_AGGREGATION", not(any(feature = "IPV6_ACTIVATE", feature = "IPV6_DUALMODE"))))]
+    src_ip_c: T2IpAddr,
+    #[cfg(all(feature = "FLOW_AGGREGATION", not(any(feature = "IPV6_ACTIVATE", feature = "IPV6_DUALMODE"))))]
+    dst_ip_c: T2IpAddr,
+
+    #[cfg(feature = "FLOW_AGGREGATION")]
+    subnet_num_src: u32,
+    #[cfg(feature = "FLOW_AGGREGATION")]
+    subnet_num_dst: u32,
+    #[cfg(feature = "FLOW_AGGREGATION")]
+    src_port_c: u16,
+    #[cfg(feature = "FLOW_AGGREGATION")]
+    dst_port_c: u16,
+    #[cfg(feature = "FLOW_AGGREGATION")]
+    l4_type_c: u8,
+
     /// Type of the layer 4 header as defined in [`L4Type`](packet/enum.L4Type.html).
     l4_type: u8,
 

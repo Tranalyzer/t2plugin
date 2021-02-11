@@ -52,7 +52,13 @@ pub const HDOVRN              : u64 = 0x0001000000000000;  // Header description
 pub const FL_ALARM            : u64 = 0x0002000000000000;  // pcapd and PD_ALARM=1: if set dumps the packets from this flow to a new pcap
 pub const LANDATTACK          : u64 = 0x0004000000000000;  // Same src IP && dst IP and src port && dst port
 pub const TIMEJUMP            : u64 = 0x0008000000000000;  // Time slip possibly due to NTP operations on the capture machine
-pub const LIVEXTR             : u64 = 0x0010000000000000;  // Flow should be extracted by the liveXtr plugin
+pub const __RESERVED__        : u64 = 0x0010000000000000;  // RESERVED, do not use
+pub const SUBN_FLW_TST        : u64 = 0x0080000000000000;  // Subnet tested for that flow
+pub const TORADD              : u64 = 0x0100000000000000;  // Tor address detected
+pub const FS_VLAN0            : u64 = 0x0200000000000000;  // A packet had a priority tag (VLAN tag with ID 0)
+pub const FS_IPV4_PKT         : u64 = 0x0400000000000000;  // IPv4 packet
+pub const FS_IPV6_PKT         : u64 = 0x0800000000000000;  // IPv6 packet
+pub const FDLSIDX             : u64 = 0x4000000000000000;  // Flow duration limit, same findex for all subflows
 pub const PCAPSNPD            : u64 = 0x8000000000000000;  // PCAP packet length > MAX_MTU in ioBuffer.h, caplen reduced
 
 pub const SNAPLENGTH          : u64 = L2SNAPLENGTH | L3SNAPLENGTH;

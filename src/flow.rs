@@ -60,9 +60,6 @@ pub struct Flow {
     /// flow destination port (UDP or TCP)
     pub dst_port: u16,
 
-    #[cfg(feature = "IPV6_ACTIVATE")]
-    ip_ver: u8,
-
     #[cfg(feature = "SCTP_ACTIVATE")]
     sctp_strm: u16,
 
@@ -83,7 +80,10 @@ pub struct Flow {
 
     last_ipid: u32,
 
-    last_trdo: u16, // teredo
+    #[cfg(feature = "SUBNET_INIT")]
+    subnet_nr_src: u32,
+    #[cfg(feature = "SUBNET_INIT")]
+    subnet_nr_dst: u32,
 
     /// flow status bits.
     pub status: u64,

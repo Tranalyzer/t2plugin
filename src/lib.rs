@@ -141,7 +141,6 @@ extern {
     fn bv_append_bv(dst: *mut BinaryValue, new: *mut BinaryValue) -> *mut BinaryValue;
     fn bv_new_bv(name_long: *const c_char, name_short: *const c_char, repeating: u32, count: u32, ...) -> *mut BinaryValue;
     fn outputBuffer_append(buffer: *mut OutputBuffer, output: *const c_char, size: usize);
-    fn outputBuffer_append_str(buffer: *mut OutputBuffer, output: *const c_char);
 }
 
 /// Returns the number of flows that Tranalyzer2 can store in its internal hashtable.
@@ -200,9 +199,11 @@ pub fn getflow<'a>(index: c_ulong) -> &'a mut Flow {
 /// }
 /// ```
 pub fn output_string<T: AsRef<str>>(string: T) {
-    let cstring = CString::new(string.as_ref()).unwrap().into_raw();
+    let cstring = CString::new(string.as_ref()).unwrap();
+    let len = cstring.as_bytes_with_nul().len();
+    let cstring = cstring.into_raw();
     unsafe {
-        outputBuffer_append_str(main_output_buffer, cstring);
+        outputBuffer_append(main_output_buffer, cstring, len);
     }
 }
 
@@ -232,10 +233,7 @@ pub fn output_string<T: AsRef<str>>(string: T) {
 pub fn output_strings<T: AsRef<str>>(strings: &[T]) {
     output_num(strings.len() as u32);
     for string in strings {
-        let cstring = CString::new(string.as_ref()).unwrap().into_raw();
-        unsafe {
-            outputBuffer_append_str(main_output_buffer, cstring);
-        }
+        output_string(string);
     }
 }
 
