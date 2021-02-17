@@ -18,7 +18,7 @@ This crate allows to easily develop [Rust](https://www.rust-lang.org/) plugins f
 
 2. Clone the Tranalyzer2 Rust plugin template and rename it.
 
-        cd $T2HOME
+        cd $T2HOME/plugins
         git clone https://github.com/Tranalyzer/rustTemplate.git myPluginName
         cd myPluginName
         ./autogen.sh --rename

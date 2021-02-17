@@ -17,17 +17,18 @@
 //! network traffic analysis tool.
 //!
 //! An example Rust plugin for Tranalyzer2 using this crate can be found here:
-//! https://github.com/Tranalyzer/rustExample
+//! [https://github.com/Tranalyzer/rustExample](https://github.com/Tranalyzer/rustExample)
 //!
 //! # Create a new plugin
 //!
-//! 1. [Download](https://tranalyzer.com/getit) and [install](https://tranalyzer.com/install)
+//! 1. [Download](https://tranalyzer.com/downloads) and
+//!    [install](https://tranalyzer.com/tutorial/installation)
 //!    Tranalyzer2.
 //!
 //! 2. Clone the Tranalyzer2 Rust plugin template and rename it.
 //!
 //!    ```sh
-//!    cd $T2HOME
+//!    cd $T2HOME/plugins
 //!    git clone https://github.com/Tranalyzer/rustTemplate.git myPluginName
 //!    cd myPluginName
 //!    ./autogen.sh --rename
@@ -348,6 +349,7 @@ pub trait T2Plugin {
     ///         // this plugin cannot run if "tcpFlags" and "httpSniffer" are not loaded
     ///         vec!["tcpFlags", "httpSniffer"]
     ///     }
+    /// }
     /// ```
     fn get_dependencies() -> Vec<&'static str> { vec![] }
 

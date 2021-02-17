@@ -109,7 +109,7 @@ pub struct Packet {
     pub outer_l2_type: u16,
     /// Type of the layer 2 header.
     pub l2_type: u16,
-    /// Type of the layer 3 header as defined in [`L3Type`](nethdr/enum.L3Type.html).
+    /// Type of the layer 3 header as defined in [`L3Type`](../nethdr/enum.L3Type.html).
     l3_type: u16,
     /// Per packet status bits.
     pub status: u64,
@@ -146,7 +146,7 @@ pub struct Packet {
     #[cfg(feature = "FLOW_AGGREGATION")]
     l4_type_c: u8,
 
-    /// Type of the layer 4 header as defined in [`L4Type`](nethdr/enum.L4Type.html).
+    /// Type of the layer 4 header as defined in [`L4Type`](../nethdr/enum.L4Type.html).
     l4_type: u8,
 
     vlan_hdr_count: u8,
@@ -162,7 +162,7 @@ impl Packet {
         }
     }
 
-    /// Returns an [`EthernetHeader`](nethdr/struct.EthernetHeader.html) if the packet contains an
+    /// Returns an [`EthernetHeader`](../nethdr/struct.EthernetHeader.html) if the packet contains an
     /// Ethernet header and is long enough. Returns `None` otherwise.
     pub fn ethernethdr(&self) -> Option<&EthernetHeader> {
         // assumes that all traffic is ethernet
@@ -176,7 +176,7 @@ impl Packet {
         }
     }
 
-    /// Returns an [`Ip4Header`](nethdr/struct.Ip4Header.html) if the packet contains an
+    /// Returns an [`Ip4Header`](../nethdr/struct.Ip4Header.html) if the packet contains an
     /// IPv4 header and is long enough. Returns `None` otherwise.
     pub fn ip4hdr(&self) -> Option<&Ip4Header> {
         let size = mem::size_of::<Ip4Header>();
@@ -190,7 +190,7 @@ impl Packet {
         }
     }
 
-    /// Returns an [`Ip4Header`](nethdr/struct.Ip6Header.html) if the packet contains an
+    /// Returns an [`Ip4Header`](../nethdr/struct.Ip6Header.html) if the packet contains an
     /// IPv6 header and is long enough. Returns `None` otherwise.
     pub fn ip6hdr(&self) -> Option<&Ip6Header> {
         let size = mem::size_of::<Ip6Header>();
@@ -204,7 +204,7 @@ impl Packet {
         }
     }
 
-    /// Returns an [`TcpHeader`](nethdr/struct.TcpHeader.html) if the packet contains a
+    /// Returns a [`TcpHeader`](../nethdr/struct.TcpHeader.html) if the packet contains a
     /// TCP header and is long enough. Returns `None` otherwise.
     pub fn tcphdr(&self) -> Option<&TcpHeader> {
         let size = mem::size_of::<TcpHeader>();
@@ -218,7 +218,7 @@ impl Packet {
         }
     }
 
-    /// Returns an [`UdpHeader`](nethdr/struct.UdpHeader.html) if the packet contains a
+    /// Returns a [`UdpHeader`](../nethdr/struct.UdpHeader.html) if the packet contains a
     /// UDP header and is long enough. Returns `None` otherwise.
     pub fn udphdr(&self) -> Option<&UdpHeader> {
         let size = mem::size_of::<UdpHeader>();
@@ -233,7 +233,7 @@ impl Packet {
         }
     }
 
-    /// Returns an [`IcmpHeader`](nethdr/struct.IcmpHeader.html) if the packet contains an
+    /// Returns an [`IcmpHeader`](../nethdr/struct.IcmpHeader.html) if the packet contains an
     /// ICMP header and is long enough. Returns `None` otherwise.
     pub fn icmphdr(&self) -> Option<&IcmpHeader> {
         let size = mem::size_of::<IcmpHeader>();
@@ -297,12 +297,12 @@ impl Packet {
         }
     }
 
-    /// Type of the layer 3 header as defined in [`L3Type`](nethdr/enum.L3Type.html).
+    /// Type of the layer 3 header as defined in [`L3Type`](../nethdr/enum.L3Type.html).
     pub fn l3_type(&self) -> L3Type {
         L3Type::from_u16(self.l3_type)
     }
 
-    /// Type of the layer 4 header as defined in [`L4Type`](nethdr/enum.L4Type.html).
+    /// Type of the layer 4 header as defined in [`L4Type`](../nethdr/enum.L4Type.html).
     pub fn l4_type(&self) -> L4Type {
         L4Type::from_u8(self.l4_type)
     }

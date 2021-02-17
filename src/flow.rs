@@ -168,7 +168,7 @@ impl Flow {
         }
     }
 
-    /// Type of the layer 4 header as defined in [`L4Type`](nethdr/enum.L4Type.html).
+    /// Type of the layer 4 header as defined in [`L4Type`](../nethdr/enum.L4Type.html).
     pub fn l4_proto(&self) -> L4Type {
         L4Type::from_u8(self.l4_proto)
     }
