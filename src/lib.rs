@@ -60,6 +60,7 @@ use flow::Flow;
 use libc::c_char;
 use std::mem;
 use std::iter::Product;
+use std::net::IpAddr;
 use std::ops::Div;
 use std::ffi::CString;
 
@@ -77,7 +78,7 @@ pub const HASHTABLE_ENTRY_NOT_FOUND: c_ulong = std::u64::MAX;
 #[cfg(target_arch = "x86")]
 pub const HASHTABLE_ENTRY_NOT_FOUND: c_ulong = std::u32::MAX;
 
-/// Rust opaque representation of `binart_valut_t` struct from Tranalyzer2
+/// Rust opaque representation of `binary_value_t` struct from Tranalyzer2
 pub enum BinaryValue {}
 /// Rust opaque representation of `outputBuffer_t` struct from Tranalyzer2
 pub enum OutputBuffer {}
@@ -122,16 +123,19 @@ pub enum BinaryType {
     bt_string,
     // now the special types
     bt_flow_direction,
-    bt_unix_time,   // the time struct consists of one uint_64 value for the seconds
-                    // and a uint_32_t value for the nanosecs
-    bt_time,        // this is the same than above, but rather than unix_time, this
-                    // type is for time data where it makes no sense to calculate an
-                    // absolute date (e.g. time durations) but where a textual output
-                    // could be changed e.g. from seconds to minutes or hours.
+    bt_timestamp,   // date whose representation depends on B2T_TIMESTR in utils/bin2txt.h:
+                    // 0: unix timestamp, 1: human readable date and time
+    bt_duration,    // the time struct consists of one uint64 value for the seconds
+                    // and one uint32_t value for the micro-/nano-secs
     bt_mac_addr,
     bt_ip4_addr,
     bt_ip6_addr,
-    bt_string_class,
+    bt_ipx_addr,     // version (8 bits), address (0, 4 or 16 bytes)
+    bt_string_class, // A string for classnames. CAUTION: textOutput doesn't escape control characters.
+                     // Advantage: We don't need '"' chars at the beginning and end of the string
+                     // Disadvantage: Usage of underscore, blank, semicolon, and every non-printable
+                     // ASCII are STRICTLY FORBIDDEN !!! If your classnames contain such chars, you'll
+                     // CORRUPT THE OUTPUT!!!
 }
 
 // access to C functions and variables exported by the Tranalyzer2 core
@@ -303,20 +307,19 @@ pub fn output_nums<T: Product + Div>(vals: &[T]) {
 /// This function can be called in the
 /// [``on_flow_terminate``](trait.T2Plugin.html#method.on_flow_terminate) function to append
 /// raw bytes in Tranalyzer2 output buffer. This can be used to output types which are neither a
-/// string, nor a number (e.g. MAC or IP addresses).
+/// string, nor a number (e.g. MAC addresses).
 ///
 /// # Example
 ///
 /// ```
+/// struct ExamplePlugin {
+///     mac_address: [u8; 6],
+/// }
+///
 /// impl T2Plugin for ExamplePlugin {
-///     ...
 ///     #[allow(unused_variables)]
 ///     fn on_flow_terminate(&mut self, flow: &mut Flow) {
-///         // output flow source IPv6 address in a bt_ip6_addr column
-///         match flow.src_ip6() {
-///             Some(ip) => output_bytes(&ip.octets()),
-///             None => output_bytes(&[0u8; 16]),
-///         }
+///         output_bytes(&self.mac_address);
 ///     }
 /// }
 /// ```
@@ -325,6 +328,42 @@ pub fn output_bytes(val: &[u8]) {
     let size = val.len();
     unsafe {
         outputBuffer_append(main_output_buffer, ptr as *const c_char, size);
+    }
+}
+
+/// Appends an IP address to Tranalyzer2 output buffer.
+///
+/// This function can be called in the
+/// [``on_flow_terminate``](trait.T2Plugin.html#method.on_flow_terminate) function to append
+/// an IP address in Tranalyzer2 output buffer. This functions will panic if the IP address type
+/// is not compatible with the column type.
+///
+/// # Example
+///
+/// ```
+/// impl T2Plugin for ExamplePlugin {
+///     ...
+///     #[allow(unused_variables)]
+///     fn on_flow_terminate(&mut self, flow: &mut Flow) {
+///         ...
+///         // output flow source IP address in a bt_ipx_addr column
+///         output_ip(flow.src_ip(), BinaryType::bt_ipx_addr);
+///     }
+/// }
+/// ```
+pub fn output_ip(val: &IpAddr, ip_type: BinaryType) {
+    match (val, ip_type) {
+        (IpAddr::V4(ip), BinaryType::bt_ip4_addr) => output_bytes(&ip.octets()),
+        (IpAddr::V6(ip), BinaryType::bt_ip6_addr) => output_bytes(&ip.octets()),
+        (IpAddr::V4(ip), BinaryType::bt_ipx_addr) => {
+            output_num(4 as u8);
+            output_bytes(&ip.octets());
+        },
+        (IpAddr::V6(ip), BinaryType::bt_ipx_addr) => {
+            output_num(6 as u8);
+            output_bytes(&ip.octets());
+        },
+        _ => panic!("output_ip: incompatible IP and column type."),
     }
 }
 
