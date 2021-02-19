@@ -13,15 +13,14 @@ This crate allows to easily develop [Rust](https://www.rust-lang.org/) plugins f
 
 ## Create a new plugin
 
-1. [Download](https://tranalyzer.com/getit) and [install](https://tranalyzer.com/install)
-   Tranalyzer2.
+1. [Download](https://tranalyzer.com/downloads) and
+   [install](https://tranalyzer.com/tutorial/installation) Tranalyzer2.
 
-2. Clone the Tranalyzer2 Rust plugin template and rename it.
+2. Create a new Rust plugin
 
         cd $T2HOME/plugins
-        git clone https://github.com/Tranalyzer/rustTemplate.git myPluginName
+        t2plugin --rust -c myPluginName
         cd myPluginName
-        ./autogen.sh --rename
 
 3. Optional: change the `PLUGINORDER` at the top of `autogen.sh`.
 
