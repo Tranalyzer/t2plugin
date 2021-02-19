@@ -32,26 +32,31 @@ struct PacketHeader {
 /// Represents a packet with its different headers and associated lengths.
 #[repr(C)]
 pub struct Packet {
-    #[cfg(feature = "T2_PRI_HDRDESC")]
-    hdr_desc: [c_char; 128],
-    #[cfg(feature = "T2_PRI_HDRDESC")]
-    hdr_desc_pos: u16,
-    #[cfg(feature = "T2_PRI_HDRDESC")]
-    num_hdr_desc: u16,
+    /// Per packet status bits.
+    pub status: u64,
+
+    #[cfg(feature = "FLOW_LIFETIME")]
+    findex: u64,
+
+    pcap_pkthdr: *const PacketHeader,
 
     raw_packet: *const u8,
     end_packet: *const u8,
-    pcap_pkthdr: *const PacketHeader,
+
     l2_header: *const c_void,
-    vlans: *const u32,
-    ether_llc: *const c_void,
-    mpls: *const u32,
     l3_header: *const c_void,
     l4_header: *const c_void,
+
+    ether_llc: *const c_void,
+    mpls: *const u32,
+    vlans: *const u32,
+
     gre_header: *const c_void,
-    l2tp_hdr: *const c_void,
     gre_l3_hdr: *const c_void,
+
+    l2tp_hdr: *const c_void,
     l2tp_l3_hdr: *const c_void,
+
     ppp_hdr: *const c_void,
     pppoe_hdr: *const c_void,
 
@@ -73,49 +78,48 @@ pub struct Packet {
     #[cfg(feature = "SCTP_ACTIVATE")]
     pub snap_sctp_l7_len: u16,
 
+    /// On wire full packet length (from the per-packet PCAP header).
+    pub packet_raw_len: u32,
+    /// Packet snapped length
+    pub snap_len: u32,
+
+    /// Packet snapped length starting from layer 2.
+    pub snap_l2_len: u32,
+    /// Packet snapped length starting from layer 3.
+    pub snap_l3_len: u32,
+    /// Packet snapped length starting from layer 4.
+    pub snap_l4_len: u16,
+    /// Packet snapped length starting from layer 7.
+    pub snap_l7_len: u16,
+
+    /// On wire packet length starting from layer2.
+    pub packet_l2_len: u32,
+    /// Packet length depending on Tranalyzer2 `PACKETLENGTH` value, see `networkHeaders.h` for details.
+    pub packet_len: u32,
+    /// Packet payload length: layer 7 length.
+    pub packet_l7_len: u16,
+
     /// Length of the layer 2 header (Ethernet, ...).
     pub l2_hdr_len: u16,
     /// Length of the layer 3 header (IPv4, IPv6, ...).
     pub l3_hdr_len: u16,
     /// Length of the layer 4 header (TCP, UDP, ICMP, ...).
     pub l4_hdr_len: u16,
-    /// On wire full packet length (from the per-packet PCAP header).
-    pub packet_raw_len: u32,
-    /// Packet snapped length
-    pub snap_len: u32,
-    /// Packet snapped length starting from layer 2.
-    pub snap_l2_len: u32,
-    /// Packet snapped length starting from layer 3.
-    pub snap_l3_len: u32,
-    /// On wire packet length starting from layer2.
-    pub packet_l2_len: u32,
-    /// Packet length depending on Tranalyzer2 `PACKETLENGTH` value, see `networkHeaders.h` for details.
-    pub packet_len: u32,
-
-    /// Packet snapped length starting from layer 4.
-    pub snap_l4_len: u16,
-    /// Packet snapped length starting from layer 7.
-    pub snap_l7_len: u16,
-    /// Packet payload length: layer 7 length.
-    pub packet_l7_len: u16,
 
     /// Source port in host order.
     pub src_port: u16,
     /// Destination port in host order.
     pub dst_port: u16,
+
     /// Inner VLAN ID
     pub inner_vlan: u16,
+
     /// Outer type of the layer 2 header.
     pub outer_l2_type: u16,
     /// Type of the layer 2 header.
     pub l2_type: u16,
     /// Type of the layer 3 header as defined in [`L3Type`](../nethdr/enum.L3Type.html).
     l3_type: u16,
-    /// Per packet status bits.
-    pub status: u64,
-
-    #[cfg(feature = "FLOW_LIFETIME")]
-    findex: u64,
 
     #[cfg(any(feature = "IPV6_ACTIVATE", feature = "IPV6_DUALMODE"))]
     src_ip: T2IpAddr,
@@ -145,6 +149,13 @@ pub struct Packet {
     dst_port_c: u16,
     #[cfg(feature = "FLOW_AGGREGATION")]
     l4_type_c: u8,
+
+    #[cfg(feature = "T2_PRI_HDRDESC")]
+    num_hdr_desc: u16,
+    #[cfg(feature = "T2_PRI_HDRDESC")]
+    hdr_desc_pos: u16,
+    #[cfg(feature = "T2_PRI_HDRDESC")]
+    hdr_desc: [c_char; 128],
 
     /// Type of the layer 4 header as defined in [`L4Type`](../nethdr/enum.L4Type.html).
     l4_type: u8,
