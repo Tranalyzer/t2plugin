@@ -54,6 +54,8 @@ pub struct Packet {
     gre_header: *const c_void,
     gre_l3_hdr: *const c_void,
 
+    gtp_hdr: *const c_void,
+
     l2tp_hdr: *const c_void,
     l2tp_l3_hdr: *const c_void,
 
