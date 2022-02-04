@@ -49,7 +49,7 @@ pub struct Flow {
     eth_dhost: [u8; 6],
     #[cfg(feature = "ETH_ACTIVATE")]
     eth_shost: [u8; 6],
-    #[cfg(any(feature = "ETH_ACTIVATE", feature = "IPV6_DUALMODE"))]
+    #[cfg(any(feature = "ETH_ACTIVATE", feature = "IPV6_DUALMODE", feature = "LAPD_ACTIVATE"))]
     eth_type: u16,
 
     /// flow inner VLAN tag

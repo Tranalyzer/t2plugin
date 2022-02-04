@@ -1,6 +1,6 @@
 [package]
 name = "t2plugin"
-version = "0.8.12"
+version = "0.8.13"
 authors = ["Tranalyzer2 dev. team"]
 
 [dependencies]
@@ -17,3 +17,4 @@ T2_PRI_HDRDESC = []
 SUBNET_INIT = []
 FLOW_LIFETIME = []
 FLOW_AGGREGATION = []
+LAPD_ACTIVATE = []
